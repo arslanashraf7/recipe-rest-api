@@ -1,4 +1,14 @@
 from rest_framework import permissions
+from . import views
+
+class IsOwner(permissions.BasePermission):
+    """This is the base permission class for all the requests so that they are authenticated"""
+    def has_permission(self, request, view):
+        if isinstance(view,views.UserProfileViewSet) and request.method == "POST":
+            return True
+        elif request.auth is not None:
+            return True
+        return False
 
 class UpdateOwnProfile(permissions.BasePermission):
     """Allow users to edit their own profiles"""

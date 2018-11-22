@@ -114,7 +114,7 @@ class UserProfileViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.UserProfileSerializer
     queryset = models.UserProfile.objects.all()
     authentication_classes = (TokenAuthentication,)
-    permission_classes = (permissions.UpdateOwnProfile,)
+    permission_classes = (permissions.IsOwner ,permissions.UpdateOwnProfile,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('email', 'first_name', 'last_name',)
 
@@ -136,12 +136,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     queryset = models.RecipeModel.objects.all()
     authentication_classes = (TokenAuthentication,)
-    permission_classes = (permissions.UpdateOwnRecipe,)
+    permission_classes = (permissions.IsOwner, permissions.UpdateOwnRecipe,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('title', 'description', 'directions', 'ingredients',)
 
     def list(self, request, pk=None):
-        queryset = models.RecipeModel.objects.filter(created_by=request.user)
+        followings = list(models.FollowingsModel.objects.filter(follower=request.user).values_list('followed', flat=True))
+        followings.append(request.user)
+        queryset = models.RecipeModel.objects.filter(created_by__in=followings)
         serializer = serializers.RecipeSerializer(queryset, many=True)
         return Response({'recipies': serializer.data})
 
@@ -152,6 +154,7 @@ class FollowingViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.FollowingsSerializer
     queryset = models.FollowingsModel.objects.all()
     authentication_classes = (TokenAuthentication,)
+    permission_classes = (permissions.IsOwner,)
     http_method_names = ['post', 'get']
 
     # def get(self, request, format=None):
