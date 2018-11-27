@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from . import models
-import datetime
 from rest_framework import status
 from rest_framework.response import Response
 
@@ -18,7 +17,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         extra_kwargs = {'password':{'write_only':True}}
 
     def create(self, validated_data):
-        """Create and return the new data -  doing this because we want to set encrypteed password"""
+        """Create and return the new data -  doing this because we want to set encrypted password"""
 
         user = models.UserProfile(
         email = validated_data['email'],
@@ -37,44 +36,26 @@ class RecipeSerializer(serializers.ModelSerializer):
         model = models.RecipeModel
         fields = ('id', 'title', 'description', 'directions', 'ingredients', 'created_by', 'created_on')
         extra_kwargs = {'created_by':{'read_only':True}, 'created_on':{'read_only':True}}
+        use_natural_foreign_keys = True
 
-    def create(self, validated_data):
-        """This will create and return the recipe object"""
+class RecipeSerializerList(serializers.ModelSerializer):
+    """This is the serializer for the recipe models"""
+    created_by = UserProfileSerializer()
 
-        recipe = models.RecipeModel(
-        title = validated_data['title'],
-        description = validated_data['description'],
-        directions = validated_data['directions'],
-        ingredients = validated_data['ingredients'],
-        created_on = datetime.datetime.now()
-        )
-        recipe.created_on = datetime.datetime.now()
-        request = self.context.get('request', None)
-        recipe.created_by = request.user
-        recipe.save()
-        return recipe
+    class Meta:
+        model = models.RecipeModel
+        fields = ('id', 'title', 'description', 'directions', 'ingredients', 'created_by', 'created_on')
+        extra_kwargs = {'created_by':{'read_only':True}, 'created_on':{'read_only':True}}
 
-    # def list(self):
-    #     """This will return only those recipes that are created by the user"""
-    #     # return "hello"
-    #     request = self.context.get('request', None)
-    #     recipies = models.RecipeModel.objects.all().filter(created_by=self.request.user)
-    #     return recipies
 
 class FollowingsSerializer(serializers.ModelSerializer):
     """This is the serializer class for following the users"""
 
-    # followed = UserProfileSerializer
-    # follower = UserProfileSerializer
-    # created_on = serializers.DateTimeField()
     class Meta:
         model = models.FollowingsModel
         fields = ('id', 'followed', 'follower', 'created_on')
         extra_kwargs = {'follower':{'read_only':True}, 'created_on':{'read_only':True}}
         unique_together = ('followed','follower')
-    # def save(self):
-    #     user = self.context['request'].user
-    #     follower = user
 
     def create(self, validated_data):
         """Custom create method of the followings"""
@@ -82,7 +63,6 @@ class FollowingsSerializer(serializers.ModelSerializer):
         following = models.FollowingsModel(
         followed = validated_data['followed']
         )
-        following.created_on = datetime.datetime.now()
         request = self.context.get('request', None)
         following.follower = request.user
         existings = models.FollowingsModel.objects.filter(followed=following.followed, follower=following.follower)
@@ -92,5 +72,12 @@ class FollowingsSerializer(serializers.ModelSerializer):
         elif following.follower == following.followed:
             raise serializers.ValidationError({'message':'You Cannot follow yourself'})
 
-        # error = {'message': ",".join('') if len(e.args) > 0 else 'Unknown Error'}
-        raise serializers.ValidationError({'message':'Already Exists'})
+        raise serializers.ValidationError({'message':'You have already followed this user.'})
+
+class FollowingsSerializerList(serializers.ModelSerializer):
+    """This will be used to return the list of followings"""
+    follower = UserProfileSerializer()
+    followed = UserProfileSerializer()
+    class Meta:
+        model = models.FollowingsModel
+        fields = ('id', 'followed', 'follower', 'created_on')
