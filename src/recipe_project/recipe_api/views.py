@@ -12,6 +12,7 @@ from rest_framework.authtoken.serializers import AuthTokenSerializer
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.models import Token
+from django.core.exceptions import ObjectDoesNotExist
 # Create your views here.
 
 class hello_view(APIView):
@@ -151,12 +152,28 @@ class RecipeViewSet(viewsets.ModelViewSet):
         serializer.save(created_by=self.request.user)
 
     def list(self, request, pk=None):
+        """To return the list of recipies according to the followings"""
         followings = list(models.FollowingsModel.objects.filter(follower=request.user).values_list('followed', flat=True))
         followings.append(request.user)
-        queryset = models.RecipeModel.objects.filter(created_by__in=followings)
+        queryset = models.RecipeModel.objects.filter(created_by__in=followings).select_related()
         serializer = serializers.RecipeSerializerList(queryset, many=True)
         return Response({'recipies': serializer.data})
 
+    def retrieve(self, request, pk=None):
+        """This will return a single recipe object"""
+        try:
+
+            followings = list(models.FollowingsModel.objects.filter(follower=request.user).values_list('followed', flat=True))
+            followings.append(request.user)
+            item = models.RecipeModel.objects.get(created_by__in=followings, pk=pk)
+            recipeSerializer = serializers.RecipeSerializer(item)
+            return Response({'recipe': recipeSerializer.data})
+
+        except ObjectDoesNotExist:
+            return Response({'error':'No recipe Found'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error':'Some error has occoured'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # raise serializers.ValidationError({'message':'You Cannot follow yourself'})
 
 class FollowingViewSet(viewsets.ModelViewSet):
     """This will be used for following users"""
