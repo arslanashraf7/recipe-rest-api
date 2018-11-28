@@ -1,3 +1,3 @@
 # Profiles REST API
 
-REST API providing basic functionality for managing user Profiles
+REST API providing basic functionality for managing user Profiles and recipies
