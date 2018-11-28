@@ -35,7 +35,7 @@ supervisorctl restart recipe_api
 
 # Setup nginx to make our application accessible.
 cp $PROJECT_BASE_PATH/recipe-rest-api/deploy/nginx_recipe_api.conf /etc/nginx/sites-available/recipe_api.conf
-rm /etc/nginx/sites-enabled/default
+# rm /etc/nginx/sites-enabled/default
 ln -s /etc/nginx/sites-available/recipe_api.conf /etc/nginx/sites-enabled/recipe_api.conf
 systemctl restart nginx.service
 
