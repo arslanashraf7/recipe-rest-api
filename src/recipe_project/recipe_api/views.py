@@ -90,7 +90,7 @@ class hello_viewset(viewsets.ViewSet):
             return Response(
                 serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def retrieve(self, request,pk=None):
+    def retrieve(self, request, pk=None):
         """To get the specific recipe object"""
 
         return Response({'Method':"GET"})
@@ -153,17 +153,23 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def list(self, request, pk=None):
         """To return the list of recipies according to the followings"""
-        followings = list(models.FollowingsModel.objects.filter(follower=request.user).values_list('followed', flat=True))
+        followings = list(models.FollowingsModel.objects
+                    .filter(follower=request.user)
+                    .values_list('followed', flat=True))
+
         followings.append(request.user)
+
         queryset = models.RecipeModel.objects.filter(created_by__in=followings).select_related()
         serializer = serializers.RecipeSerializerList(queryset, many=True)
         return Response({'recipies': serializer.data})
 
     def retrieve(self, request, pk=None):
         """This will return a single recipe object"""
+        """This has enabled the put request in django api"""
         try:
 
-            followings = list(models.FollowingsModel.objects.filter(follower=request.user).values_list('followed', flat=True))
+            followings = list(models.FollowingsModel.objects
+            .filter(follower=request.user).values_list('followed', flat=True))
             followings.append(request.user)
             item = models.RecipeModel.objects.get(created_by__in=followings, pk=pk)
             recipeSerializer = serializers.RecipeSerializer(item)
