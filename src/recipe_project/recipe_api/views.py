@@ -15,101 +15,6 @@ from rest_framework.authtoken.models import Token
 from django.core.exceptions import ObjectDoesNotExist
 # Create your views here.
 
-class hello_view(APIView):
-    """This is the test api view for recipe"""
-
-    serializer_class = serializers.HelloSerializer
-
-    def get(self, request, format=None):
-        """This is the direct get function when api view is hit"""
-
-        recipe_list = [
-        'Recipe 1',
-        'Recipe 2',
-        'Recipe 3'
-        ]
-
-
-        return Response({'message' : 'Hey Recipe' , 'Data' : recipe_list })
-
-    def post(self, request):
-        """Handling new recipe create requests"""
-
-        serializer = serializers.HelloSerializer(data=request.data)
-
-        if serializer.is_valid():
-            name = serializer.data.get('name')
-            message = 'Hello ! {0}'.format(name)
-            return Response({'message': message})
-        else:
-            return Response(
-                serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def put(self, request, pk=None):
-        """This will be used to edit the recipies data"""
-
-        return Response({'Method': 'PUT'})
-
-    def patch(self, request, pk=None):
-        """THis will be used to partially update an object"""
-
-        return Response({'Method':'PATCH'})
-
-    def delete(self, request, pk=None):
-        """THis will delete the object"""
-
-        return Response({'Method':'DELETE'})
-
-class hello_viewset(viewsets.ViewSet):
-    """This is the view set for recipe"""
-
-    serializer_class = serializers.HelloSerializer
-
-    def list(self, request):
-        """Direct get dunction on the view set"""
-
-        recipies = [
-        'Recipe 1',
-        'Recipe 2',
-        'Recipe3',
-        ]
-
-        return Response(
-            {'message': 'i will return recipies', 'recipies':recipies})
-
-    def create(self, request):
-        """This is used to create the new recipe objects"""
-
-        serializer = serializers.HelloSerializer(data=request.data)
-
-        if serializer.is_valid():
-            name = serializer.data.get('name')
-            message = 'Hello {0}'.format(name)
-            return Response({'message': message})
-        else:
-            return Response(
-                serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def retrieve(self, request, pk=None):
-        """To get the specific recipe object"""
-
-        return Response({'Method':"GET"})
-
-    def update(self, request, pk=None):
-        """TO update the recipe object"""
-
-        return Response({'Method':"PUT"})
-
-    def partial_update(self, request, pk=None):
-        """TO update the recipe object"""
-
-        return Response({'Method':"PATCH"})
-
-    def destroy(self, request, pk=None):
-        """TO update the recipe object"""
-
-        return Response({'Method':"DELETE"})
-
 class UserProfileViewSet(viewsets.ModelViewSet):
     """Handles creating reading and updating profiles"""
 
@@ -179,7 +84,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return Response({'error':'No recipe Found'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'error':'Some error has occoured'}, status=status.HTTP_400_BAD_REQUEST)
 
-            # raise serializers.ValidationError({'message':'You Cannot follow yourself'})
 
 class FollowingViewSet(viewsets.ModelViewSet):
     """This will be used for following users"""
