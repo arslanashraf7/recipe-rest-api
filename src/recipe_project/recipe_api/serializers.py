@@ -32,24 +32,18 @@ class UserProfileSerializer(serializers.ModelSerializer):
 class RecipeSerializer(serializers.ModelSerializer):
     """This is the serializer for the recipe models"""
 
+    created_by = UserProfileSerializer(read_only=True)
     class Meta:
         model = models.RecipeModel
         fields = ('id', 'title', 'description', 'directions', 'ingredients', 'created_by', 'created_on')
         extra_kwargs = {'created_by':{'read_only':True}, 'created_on':{'read_only':True}}
         use_natural_foreign_keys = True
 
-class RecipeSerializerList(serializers.ModelSerializer):
-    """This is the serializer for the recipe models"""
-    created_by = UserProfileSerializer()
-
-    class Meta:
-        model = models.RecipeModel
-        fields = ('id', 'title', 'description', 'directions', 'ingredients', 'created_by', 'created_on')
-        extra_kwargs = {'created_by':{'read_only':True}, 'created_on':{'read_only':True}}
-
-
 class FollowingsSerializer(serializers.ModelSerializer):
     """This is the serializer class for following the users"""
+
+    follower = UserProfileSerializer(read_only=True)
+    followed = serializers.PrimaryKeyRelatedField(queryset=models.UserProfile.objects.all())
 
     class Meta:
         model = models.FollowingsModel
@@ -73,11 +67,3 @@ class FollowingsSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({'message':'You Cannot follow yourself'})
 
         raise serializers.ValidationError({'message':'You have already followed this user.'})
-
-class FollowingsSerializerList(serializers.ModelSerializer):
-    """This will be used to return the list of followings"""
-    follower = UserProfileSerializer()
-    followed = UserProfileSerializer()
-    class Meta:
-        model = models.FollowingsModel
-        fields = ('id', 'followed', 'follower', 'created_on')

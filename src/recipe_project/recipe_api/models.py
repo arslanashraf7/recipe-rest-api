@@ -82,9 +82,9 @@ class RecipeModel(models.Model):
     id = models.AutoField(primary_key=True)
     title = models.CharField(max_length=255)
     description = models.CharField(max_length=5000)
-    directions = models.CharField(max_length=5000)
-    ingredients = models.CharField(max_length=5000)
-    created_by = models.ForeignKey('UserProfile', on_delete=models.CASCADE)
+    directions = models.CharField(max_length=5000, blank=True)
+    ingredients = models.CharField(max_length=5000, blank=True)
+    created_by = models.ForeignKey(UserProfile, related_name='created_by', on_delete=models.CASCADE)
     created_on = models.DateTimeField(auto_now_add=True)
 
     REQUIRED_FIELDS = ['title', 'description']
@@ -128,8 +128,8 @@ class FollowingsModel(models.Model):
     """This class will hold the followings of the users"""
 
     id = models.AutoField(primary_key=True)
-    followed = models.ForeignKey('UserProfile', on_delete=models.CASCADE, related_name='followed')
-    follower = models.ForeignKey('UserProfile', on_delete=models.CASCADE, related_name='follower')
+    followed = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='followed')
+    follower = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='follower')
     created_on = models.DateTimeField(auto_now_add=True)
     class Meta:
         unique_together = ('follower', 'followed')

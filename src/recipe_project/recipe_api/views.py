@@ -65,7 +65,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         followings.append(request.user)
 
         queryset = models.RecipeModel.objects.filter(created_by__in=followings).select_related()
-        serializer = serializers.RecipeSerializerList(queryset, many=True)
+        serializer = serializers.RecipeSerializer(queryset, many=True)
         return Response({'recipies': serializer.data})
 
     def retrieve(self, request, pk=None):
@@ -76,9 +76,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
             followings = list(models.FollowingsModel.objects
             .filter(follower=request.user).values_list('followed', flat=True))
             followings.append(request.user)
-            item = models.RecipeModel.objects.get(created_by__in=followings, pk=pk)
+            item = models.RecipeModel.objects.select_related('created_by').get(created_by__in=followings, pk=pk)
             recipeSerializer = serializers.RecipeSerializer(item)
-            return Response({'recipe': recipeSerializer.data})
+            return Response(recipeSerializer.data)
 
         except ObjectDoesNotExist:
             return Response({'error':'No recipe Found'}, status=status.HTTP_400_BAD_REQUEST)
@@ -92,12 +92,12 @@ class FollowingViewSet(viewsets.ModelViewSet):
     queryset = models.FollowingsModel.objects.all()
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
-    http_method_names = ['post', 'get']
+    http_method_names = ['post', 'get','delete']
 
 
     def list(self, request, pk=None):
         """This will return the list of followings"""
 
         queryset = models.FollowingsModel.objects.filter(follower=request.user)
-        serializer = serializers.FollowingsSerializerList(queryset, many=True)
+        serializer = serializers.FollowingsSerializer(queryset, many=True)
         return Response({'followings':serializer.data})
