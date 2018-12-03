@@ -64,7 +64,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
         followings.append(request.user)
 
-        queryset = models.RecipeModel.objects.filter(created_by__in=followings).select_related()
+        queryset = models.RecipeModel.objects.filter(created_by__in=followings)
         serializer = serializers.RecipeSerializer(queryset, many=True)
         return Response({'recipies': serializer.data})
 
@@ -76,7 +76,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             followings = list(models.FollowingsModel.objects
             .filter(follower=request.user).values_list('followed', flat=True))
             followings.append(request.user)
-            item = models.RecipeModel.objects.select_related('created_by').get(created_by__in=followings, pk=pk)
+            item = models.RecipeModel.objects.get(created_by__in=followings, pk=pk)
             recipeSerializer = serializers.RecipeSerializer(item)
             return Response(recipeSerializer.data)
 
