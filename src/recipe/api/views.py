@@ -16,7 +16,9 @@ from django.core.exceptions import ObjectDoesNotExist
 # Create your views here.
 
 class UserProfileViewSet(viewsets.ModelViewSet):
-    """Handles creating reading and updating profiles"""
+    """
+    Handles creating reading and updating profiles
+    """
 
     serializer_class = serializers.UserProfileSerializer
     queryset = models.UserProfile.objects.all()
@@ -27,12 +29,16 @@ class UserProfileViewSet(viewsets.ModelViewSet):
 
 
 class LoginViewSet(viewsets.ViewSet):
-    """Check Email, pass and return auth token"""
+    """
+    Check Email, pass and return auth token
+    """
 
     serializer_class = AuthTokenSerializer
 
     def create(self, request):
-        """Use the ObtainAuthToken APIView to validate and create a token"""
+        """
+        Use the ObtainAuthToken APIView to validate and create a token
+        """
 
         response = ObtainAuthToken().post(request)
         token = Token.objects.get(key=response.data['token'])
@@ -41,63 +47,74 @@ class LoginViewSet(viewsets.ViewSet):
         return Response({'token':token.key, 'user':userSerializer.data})
 
 class RecipeViewSet(viewsets.ModelViewSet):
-    """This is the vieset for recipe models"""
+    """
+    This is the vieset for recipe models
+    """
 
     serializer_class = serializers.RecipeSerializer
 
-    queryset = models.RecipeModel.objects.all()
+    queryset = models.Recipe.objects.all()
     authentication_classes = (TokenAuthentication,)
     permission_classes = (permissions.UpdateOwnRecipe, IsAuthenticated,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('title', 'description', 'directions', 'ingredients',)
 
     def perform_create(self, serializer):
-        """This will create a new recipe object in the system"""
+        """
+        This will create a new recipe object in the system
+        """
 
         serializer.save(created_by=self.request.user)
 
     def list(self, request, pk=None):
-        """To return the list of recipies according to the followings"""
-        followings = list(models.FollowingsModel.objects
+        """
+        To return the list of recipies according to the followings
+        """
+        followings = list(models.Followings.objects
                     .filter(follower=request.user)
                     .values_list('followed', flat=True))
 
         followings.append(request.user)
 
-        queryset = models.RecipeModel.objects.filter(created_by__in=followings)
+        queryset = models.Recipe.objects.filter(created_by__in=followings)
         serializer = serializers.RecipeSerializer(queryset, many=True)
         return Response({'recipies': serializer.data})
 
     def retrieve(self, request, pk=None):
-        """This will return a single recipe object"""
-        """This has enabled the put request in django api"""
+        """
+        This will return a single recipe object
+        """
         try:
 
-            followings = list(models.FollowingsModel.objects
+            followings = list(models.Followings.objects
             .filter(follower=request.user).values_list('followed', flat=True))
             followings.append(request.user)
-            item = models.RecipeModel.objects.get(created_by__in=followings, pk=pk)
+            item = models.Recipe.objects.get(created_by__in=followings, pk=pk)
             recipeSerializer = serializers.RecipeSerializer(item)
             return Response(recipeSerializer.data)
 
         except ObjectDoesNotExist:
-            return Response({'error':'No recipe Found'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error':'No recipe Found'}, status=status.HTTP_404_NOT_FOUND)
         return Response({'error':'Some error has occoured'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class FollowingViewSet(viewsets.ModelViewSet):
-    """This will be used for following users"""
+    """
+    This will be used for following users
+    """
 
     serializer_class = serializers.FollowingsSerializer
-    queryset = models.FollowingsModel.objects.all()
+    queryset = models.Followings.objects.all()
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
     http_method_names = ['post', 'get','delete']
 
 
     def list(self, request, pk=None):
-        """This will return the list of followings"""
+        """
+        This will return the list of followings
+        """
 
-        queryset = models.FollowingsModel.objects.filter(follower=request.user)
+        queryset = models.Followings.objects.filter(follower=request.user)
         serializer = serializers.FollowingsSerializer(queryset, many=True)
         return Response({'followings':serializer.data})
