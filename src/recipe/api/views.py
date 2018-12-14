@@ -13,6 +13,7 @@ from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.models import Token
 from django.core.exceptions import ObjectDoesNotExist
+from django.http import Http404
 # Create your views here.
 
 class UserProfileViewSet(viewsets.ModelViewSet):
@@ -26,6 +27,73 @@ class UserProfileViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsOwner ,permissions.UpdateOwnProfile,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('email', 'first_name', 'last_name',)
+
+class UserProfileView(APIView):
+    """
+    Handles creating reading and updating profiles
+    """
+
+    serializer_class = serializers.UserProfileSerializer
+    queryset = models.UserProfile.objects.all()
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (permissions.IsOwner ,permissions.UpdateOwnProfile,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('email', 'first_name', 'last_name',)
+
+    def get(self, request, format=None):
+        """
+        Get for users
+        """
+        users = models.UserProfile.objects.all()
+        users_serialized = serializers.UserProfileSerializer(users, many=True)
+
+        return Response(users_serialized.data)
+
+
+    def post(self, request):
+        """
+        Manually create a users
+        """
+        user_serialized = serializers.UserProfileSerializer(data=request.data)
+        if user_serialized.is_valid():
+             user_serialized.save()
+             return Response(user_serialized.data)
+        return Response(user_serialized.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserProfileDetail(APIView):
+    """
+    This class will handle the details requests for the users
+    """
+
+    def get(self, request, pk, format=None):
+        """
+        Return a single user profiles
+        """
+        user = self.get_object(pk)
+        user_serialized = serializers.UserProfileSerializer(user)
+        return Response(user_serialized.data)
+
+    def get_object(self, pk=None):
+        """
+        Will return a single user onject
+        """
+        try:
+            return models.UserProfile.objects.get(pk=pk)
+        except models.UserProfile.DoesNotExist:
+            raise Http404
+
+    def put(self, request, pk=None):
+        """
+        this is manual update of users
+        """
+        user_serialized = serializers.UserProfileSerializer(data=request.data)
+
+        if user_serialized.is_valid():
+            user_serialized.save()
+            return Response(user_serialized.data)
+        return Response(user_serialized.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 class LoginViewSet(viewsets.ViewSet):
